@@ -7,6 +7,8 @@
  *
  *****************************************************************************/
 #include <cstdint>
+#include <string>
+
 /**
  * this wrapper provides function to encode and decode can message for dm motor
  */
@@ -38,7 +40,7 @@ public:
         float t_rotor;
     };
     
-    void init(uint16_t cmd_can_id, uint16_t feedback_can_id);
+    void init(std::string name, uint16_t cmd_can_id, uint16_t feedback_can_id);
     void set_cmd(float target_pos, float target_vel, float target_torq);
     void set_cmd(float target_pos, float target_vel, float target_torq, float kp, float kd);
     void encode_cmd_msg(uint8_t data[8]);
@@ -46,12 +48,14 @@ public:
 
     uint16_t getCmdCanId() const { return cmd_can_id_; }
     uint16_t getFeedbackCanId() const { return feedback_can_id_; }
+    std::string getName() const { return name_; }
     const cmd_msg &getCmdMsg() const { return cmd_msg_; }
     const sensor_feedback &getSensorFeedback() const { return sensor_feedback_; }
 
 private:
     uint16_t cmd_can_id_;
     uint16_t feedback_can_id_;
+    std::string name_;
 
     const float P_MIN = -12.5;
     const float P_MAX = 12.5;

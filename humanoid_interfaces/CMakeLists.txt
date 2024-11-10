@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.5)
-project(humanoid_hardware)
+project(humanoid_interfaces)
 
 # Default to C99
 if(NOT CMAKE_C_STANDARD)
@@ -18,25 +18,11 @@ endif()
 # find dependencies
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
-find_package(humanoid_interfaces REQUIRED)
+find_package(rosidl_default_generators REQUIRED)
 
-
-include_directories(include)
-
-add_executable(MotorCtrlNode
-    src/MotorCtrlNode.cpp
-    src/DaMiaoMotor.cpp
-)
-
-ament_target_dependencies(MotorCtrlNode
-    rclcpp
-    humanoid_interfaces
-)
-
-install (
-    TARGETS
-    MotorCtrlNode
-    DESTINATION lib/${PROJECT_NAME}
+rosidl_generate_interfaces(${PROJECT_NAME}
+  "msg/MotorCommand.msg"
+  "msg/MotorFeedback.msg"
 )
 
 ament_package()

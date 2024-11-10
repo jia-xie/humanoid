@@ -1,6 +1,7 @@
-#include "DaMiaoMotor.hpp"
+#include "humanoid_hardware/DaMiaoMotor.hpp"
 
-void DaMiaoMotor::init(uint16_t can_id, uint16_t feedback_can_id) {
+void DaMiaoMotor::init(std::string name, uint16_t can_id, uint16_t feedback_can_id) {
+    name_ = name;
     cmd_can_id_ = can_id;
     feedback_can_id_ = feedback_can_id;
 }
