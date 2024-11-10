@@ -28,14 +28,23 @@ add_executable(MotorCtrlNode
     src/DaMiaoMotor.cpp
 )
 
+add_executable(SerialNode
+    src/SerialNode.cpp
+)
+
 ament_target_dependencies(MotorCtrlNode
     rclcpp
     humanoid_interfaces
 )
 
+ament_target_dependencies(SerialNode
+    rclcpp
+)
+
 install (
     TARGETS
     MotorCtrlNode
+    SerialNode
     DESTINATION lib/${PROJECT_NAME}
 )
 

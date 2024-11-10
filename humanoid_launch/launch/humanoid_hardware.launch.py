@@ -21,8 +21,16 @@ def generate_launch_description():
         parameters=[LaunchConfiguration('param_file')]
     )
 
+    # Node to read serial data from STM32
+    serial_node = Node(
+        package="humanoid_hardware",
+        executable="SerialNode",
+        name="serial_node",
+    )
+
     # Add the argument and node to the launch description
     ld.add_action(param_file_arg)
     ld.add_action(motor_ctrl_node)
+    ld.add_action(serial_node)
 
     return ld
