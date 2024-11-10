@@ -1,11 +1,5 @@
 #include "humanoid_hardware/DaMiaoMotor.hpp"
 
-void DaMiaoMotor::init(std::string name, uint16_t can_id, uint16_t feedback_can_id) {
-    name_ = name;
-    cmd_can_id_ = can_id;
-    feedback_can_id_ = feedback_can_id;
-}
-
 void DaMiaoMotor::encode_cmd_msg(uint8_t data[8]) {
     uint16_t pos_temp = float_to_uint(cmd_msg_.target_pos, P_MIN, P_MAX, 16);
     uint16_t vel_temp = float_to_uint(cmd_msg_.target_vel, V_MIN, V_MAX, 12);

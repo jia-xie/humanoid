@@ -40,7 +40,15 @@ public:
         float t_rotor;
     };
     
-    void init(std::string name, uint16_t cmd_can_id, uint16_t feedback_can_id);
+    DaMiaoMotor(std::string name, uint16_t cmd_can_id, uint16_t feedback_can_id, float kp, float kd)
+    {
+        name_ = name;
+        cmd_can_id_ = cmd_can_id;
+        feedback_can_id_ = feedback_can_id;
+        cmd_msg_.kp = kp;
+        cmd_msg_.kd = kd;
+    }
+
     void set_cmd(float target_pos, float target_vel, float target_torq);
     void set_cmd(float target_pos, float target_vel, float target_torq, float kp, float kd);
     void encode_cmd_msg(uint8_t data[8]);
