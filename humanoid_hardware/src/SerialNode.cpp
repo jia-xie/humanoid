@@ -161,12 +161,12 @@ void SerialNode::readDataCallback()
     uint8_t remote_buffer[8];
     memcpy(remote_buffer, buffer + 25, 8);
 // hex_stream << "Received message: ";
-//     for (int i = 0; i < 8; ++i)
-//     {
-//         hex_stream << std::uppercase << std::hex << std::setw(2) << std::setfill('0')
-//                    << static_cast<int>(remote_buffer[i]) << " ";
-//     }
-//     RCLCPP_INFO(this->get_logger(), "%s", hex_stream.str().c_str());
+    for (int i = 0; i < 8; ++i)
+    {
+        hex_stream << std::uppercase << std::hex << std::setw(2) << std::setfill('0')
+                   << static_cast<int>(remote_buffer[i]) << " ";
+    }
+    RCLCPP_INFO(this->get_logger(), "%s", hex_stream.str().c_str());
 	int16_t right_stick_x = ((remote_buffer[0] | (remote_buffer[1] << 8)) & 0x07ff) - 1024;
 	int16_t right_stick_y = (((remote_buffer[1] >> 3) | (remote_buffer[2] << 5)) & 0x07ff) - 1024;
 	int16_t left_stick_x = (((remote_buffer[2] >> 6) | (remote_buffer[3] << 2) | (remote_buffer[4] << 10)) & 0x07ff) - 1024;
@@ -174,7 +174,7 @@ void SerialNode::readDataCallback()
 	int16_t wheel = ((remote_buffer[6] | (remote_buffer[7] << 8)) & 0x07FF) - 1024;
 	int16_t left_switch = ((remote_buffer[5] >> 4) & 0x000C) >> 2;
 	int16_t right_switch = ((remote_buffer[5] >> 4) & 0x0003);
-
+    uint8_t online = remote_buffer[7] & 0b00010000;
     // RCLCPP_INFO(this->get_logger(), "[x: %d, y: %d], r: %d, [x: %d, y: %d], l: %d, w: %d, gyro: [x: %f, y: %f, z: %f], accel: [x: %f, y: %f, z: %f]", right_stick_x, right_stick_y, right_switch, left_stick_x, left_stick_y, left_switch, wheel, decoded_data.gyro[0], decoded_data.gyro[1], decoded_data.gyro[2], decoded_data.accel[0], decoded_data.accel[1], decoded_data.accel[2]);
 }
 
