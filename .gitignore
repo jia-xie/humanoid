@@ -1,0 +1,46 @@
+# ROS 2 build artifacts
+/build/
+/install/
+/log/
+
+# CMake build files
+CMakeLists.txt.user
+*.cmake
+CMakeCache.txt
+
+# Package-specific build artifacts
+ament_cmake_environment_hooks/
+
+# Compiled Python files
+__pycache__/
+*.py[cod]
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*.swn
+*~
+
+# Ignore binary executables
+*.out
+*.a
+*.so
+
+# ROS 2 specific files
+*~*
+/.deps/
+/.target/
+/.packages/
+
+# Node artifacts
+node_modules/
+
+# Other common generated files
+.DS_Store
+*.log
+*.bak
+*.tmp
+*.old
+*.backup
