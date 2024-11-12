@@ -37,7 +37,8 @@ SerialNode::~SerialNode()
 bool SerialNode::setupSerialPort(const std::string &port, int baud_rate)
 {
     // Open the serial port in read/write mode, no controlling terminal, and no delay
-    serial_port_ = open(port.c_str(), O_RDWR | O_NOCTTY);
+    serial_port_ = open(port.c_str(), O_RDWR | O_NOCTTY | O_NONBLOCK);
+
     if (serial_port_ == -1)
     {
         RCLCPP_ERROR(this->get_logger(), "Error %i from open: %s", errno, strerror(errno));
@@ -97,6 +98,12 @@ bool SerialNode::setupSerialPort(const std::string &port, int baud_rate)
 
 void SerialNode::readDataCallback()
 {
+    if (!rclcpp::ok())
+    {
+        return; // Exit if ROS is shutting down
+    }
+
+
     uint8_t buffer[33];
     int num_bytes = read(serial_port_, buffer, sizeof(buffer));
     // Print the raw message in hexadecimal format
@@ -107,19 +114,19 @@ void SerialNode::readDataCallback()
     }
     
     // Calculate time since last frame
-    // auto current_time = std::chrono::steady_clock::now();
-    // if (first_frame_received_) {
-    //     auto time_diff = std::chrono::duration_cast<std::chrono::microseconds>(current_time - last_frame_time_).count();
-    //     // RCLCPP_INFO(this->get_logger(), "Time between frames: %ld us", time_diff);
-    // } else {
-    //     first_frame_received_ = true;  // Skip calculation for the first frame
-    // }
+    auto current_time = std::chrono::steady_clock::now();
+    if (first_frame_received_) {
+        auto time_diff = std::chrono::duration_cast<std::chrono::microseconds>(current_time - last_frame_time_).count();
+        RCLCPP_INFO(this->get_logger(), "Time between frames: %ld us", time_diff);
+    } else {
+        first_frame_received_ = true;  // Skip calculation for the first frame
+    }
 
-    // // Update last frame time
-    // last_frame_time_ = current_time;
-    if (num_bytes < 0)
+    // Update last frame time
+    last_frame_time_ = current_time;
+    if (num_bytes != 33)
     {
-        RCLCPP_WARN(this->get_logger(), "Error reading: %s", strerror(errno));
+        RCLCPP_WARN(this->get_logger(), "Received %d bytes, expected 33", num_bytes);
         return;
     }
 
