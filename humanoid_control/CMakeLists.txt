@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.5)
-project(humanoid_hardware)
+project(humanoid_control)
 
 # Default to C99
 if(NOT CMAKE_C_STANDARD)
@@ -18,40 +18,24 @@ endif()
 # find dependencies
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
-find_package(sensor_msgs)
+find_package(std_msgs REQUIRED)
+find_package(sensor_msgs REQUIRED)
 find_package(humanoid_interfaces REQUIRED)
 
-
-include_directories(include)
-
-add_executable(MotorCtrlNode
-    src/MotorCtrlNode.cpp
-    src/DaMiaoMotor.cpp
+add_executable(ControlNode
+    src/control_node.cpp
 )
 
-add_executable(SerialNode
-    src/SerialNode.cpp
-)
-
-ament_target_dependencies(MotorCtrlNode
+ament_target_dependencies(ControlNode
     rclcpp
     sensor_msgs
     humanoid_interfaces
 )
 
-ament_target_dependencies(SerialNode
-    rclcpp
-)
-
 install (
     TARGETS
-    MotorCtrlNode
-    SerialNode
+    ControlNode
     DESTINATION lib/${PROJECT_NAME}
-)
-
-install(DIRECTORY script/
-  DESTINATION share/${PROJECT_NAME}/script
 )
 
 ament_package()

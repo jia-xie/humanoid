@@ -1,41 +1,49 @@
 motor_ctrl_node:
   ros__parameters:
       cmd_can_id:
-        left_hip_pitch: 0x00
-        left_knee: 0x01
-        right_hip_pitch: 0x02
-        right_knee: 0x03
-        left_hip_yaw: 0x04
-        left_hip_roll: 0x05
-        right_hip_yaw: 0x06
-        right_hip_roll: 0x07
+        left_hip_pitch_joint: 0x00
+        left_knee_joint: 0x01
+        right_hip_pitch_joint: 0x02
+        right_knee_joint: 0x03
+        left_hip_yaw_joint: 0x04
+        left_hip_roll_joint: 0x05
+        right_hip_yaw_joint: 0x06
+        right_hip_roll_joint: 0x07
+        left_ankle_joint: 0x15
+        right_ankle_joint: 0x16
 
       feedback_can_id:
-        left_hip_pitch: 0x50
-        left_knee: 0x51
-        right_hip_pitch: 0x52
-        right_knee: 0x53
-        left_hip_yaw: 0x54
-        left_hip_roll: 0x55
-        right_hip_yaw: 0x56
-        right_hip_roll: 0x57
+        left_hip_pitch_joint: 0x50
+        left_knee_joint: 0x51
+        right_hip_pitch_joint: 0x52
+        right_knee_joint: 0x53
+        left_hip_yaw_joint: 0x54
+        left_hip_roll_joint: 0x55
+        right_hip_yaw_joint: 0x56
+        right_hip_roll_joint: 0x57
+        left_ankle_joint: 0x65
+        right_ankle_joint: 0x66
 
       kp:
-        left_hip_pitch: 2.0
-        left_knee: 2.0
-        right_hip_pitch: 2.0
-        right_knee: 2.0
-        left_hip_yaw: 2.0
-        left_hip_roll: 2.0
-        right_hip_yaw: 2.0
-        right_hip_roll: 2.0
+        left_hip_pitch_joint: .0
+        left_knee_joint: .0
+        right_hip_pitch_joint: .0
+        right_knee_joint: .0
+        left_hip_yaw_joint: .0
+        left_hip_roll_joint: .0
+        right_hip_yaw_joint: .0
+        right_hip_roll_joint: .0
+        left_ankle_joint: .0
+        right_ankle_joint: .0
 
       kd:
-        left_hip_pitch: 1.0
-        left_knee: 1.0
-        right_hip_pitch: 1.0
-        right_knee: 1.0
-        left_hip_yaw: 1.0
-        left_hip_roll: 1.0
-        right_hip_yaw: 1.0
-        right_hip_roll: 1.0
+        left_hip_pitch_joint: .0
+        left_knee_joint: .0
+        right_hip_pitch_joint: .0
+        right_knee_joint: .0
+        left_hip_yaw_joint: .0
+        left_hip_roll_joint: .0
+        right_hip_yaw_joint: .0
+        right_hip_roll_joint: .0
+        left_ankle_joint: .0
+        right_ankle_joint: .0

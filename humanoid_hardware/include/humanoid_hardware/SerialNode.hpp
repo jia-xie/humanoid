@@ -18,6 +18,7 @@ private:
     bool setupSerialPort(const std::string &port, int baud_rate);
     std::chrono::steady_clock::time_point last_frame_time_;
     bool first_frame_received_ = false;
+    int reading_period_us;
 };
 
 #endif // SERIAL_NODE_HPP

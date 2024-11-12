@@ -21,8 +21,9 @@ SerialNode::SerialNode() : Node("serial_node")
     }
 
     // Start reading data periodically
+    reading_period_us = 100; // stm32 sends at 1000Hz
     timer_ = this->create_wall_timer(
-        std::chrono::microseconds(100),
+        std::chrono::microseconds(reading_period_us),
         std::bind(&SerialNode::readDataCallback, this));
 }
 
@@ -98,32 +99,52 @@ bool SerialNode::setupSerialPort(const std::string &port, int baud_rate)
 
 void SerialNode::readDataCallback()
 {
+    static int timeout_count = 0;
+    static int error_print_count = 0; // used for not printing error every iteration
     if (!rclcpp::ok())
     {
         return; // Exit if ROS is shutting down
     }
 
-
     uint8_t buffer[33];
     int num_bytes = read(serial_port_, buffer, sizeof(buffer));
     // Print the raw message in hexadecimal format
     std::stringstream hex_stream;
-    if (num_bytes < 0) {
-    RCLCPP_ERROR(this->get_logger(), "Error reading from serial port: %s", strerror(errno));
-    return;
-    }
-    
-    // Calculate time since last frame
-    auto current_time = std::chrono::steady_clock::now();
-    if (first_frame_received_) {
-        auto time_diff = std::chrono::duration_cast<std::chrono::microseconds>(current_time - last_frame_time_).count();
-        RCLCPP_INFO(this->get_logger(), "Time between frames: %ld us", time_diff);
-    } else {
-        first_frame_received_ = true;  // Skip calculation for the first frame
-    }
+    if (num_bytes < 0)
+    {
+        timeout_count++;
+        if (timeout_count * reading_period_us > 1000 * 10) // if timeout for 10 ms
+        {
 
+            timeout_count = 0; // clear timeout_count
+            error_print_count++;
+            if (error_print_count >= 200) // print error message every 2 seconds
+            {
+                RCLCPP_ERROR(this->get_logger(), "Error reading from serial port: %s", strerror(errno));
+
+                error_print_count = 0;
+            }
+        }
+
+        return;
+    }
+    timeout_count = 0; // clear timeout_count
+    error_print_count = 0;
+
+    // Calculate time since last frame
+    // auto current_time = std::chrono::steady_clock::now();
+    // if (first_frame_received_)
+    // {
+    //     auto time_diff = std::chrono::duration_cast<std::chrono::microseconds>(current_time - last_frame_time_).count();
+    //     RCLCPP_INFO(this->get_logger(), "Time between frames: %ld us", time_diff);
+    // }
+    // else
+    // {
+    //     first_frame_received_ = true; // Skip calculation for the first frame
+    // }
     // Update last frame time
-    last_frame_time_ = current_time;
+    // last_frame_time_ = current_time;
+
     if (num_bytes != 33)
     {
         RCLCPP_WARN(this->get_logger(), "Received %d bytes, expected 33", num_bytes);
@@ -137,15 +158,17 @@ void SerialNode::readDataCallback()
         return;
     }
 
-    typedef struct {
-    uint8_t header;
-    float gyro[3];
-    float accel[3];
-    uint8_t remote_buffer[18];
+    typedef struct
+    {
+        uint8_t header;
+        float gyro[3];
+        float accel[3];
+        uint8_t remote_buffer[18];
     } DecodedData;
     DecodedData decoded_data;
     decoded_data.header = buffer[0];
-    if (decoded_data.header != 0xAA) {
+    if (decoded_data.header != 0xAA)
+    {
         // Handle invalid header error if needed
         return;
     }
@@ -160,29 +183,32 @@ void SerialNode::readDataCallback()
     memcpy(&decoded_data.accel[1], &buffer[1 + 4 * sizeof(float)], sizeof(float));
     memcpy(&decoded_data.accel[2], &buffer[1 + 5 * sizeof(float)], sizeof(float));
 
-
-
-    // RCLCPP_INFO(this->get_logger(), "Gyroscope: [x: %f, y: %f, z: %f]", decoded_data.gyro[0], decoded_data.gyro[1], decoded_data.gyro[2]);
-    // RCLCPP_INFO(this->get_logger(), "Accelerometer: [x: %f, y: %f, z: %f]", decoded_data.accel[0], decoded_data.accel[1], decoded_data.accel[2]);
-
     uint8_t remote_buffer[8];
     memcpy(remote_buffer, buffer + 25, 8);
-// hex_stream << "Received message: ";
+    // hex_stream << "Received message: ";
     for (int i = 0; i < 8; ++i)
     {
         hex_stream << std::uppercase << std::hex << std::setw(2) << std::setfill('0')
                    << static_cast<int>(remote_buffer[i]) << " ";
     }
-    RCLCPP_INFO(this->get_logger(), "%s", hex_stream.str().c_str());
-	int16_t right_stick_x = ((remote_buffer[0] | (remote_buffer[1] << 8)) & 0x07ff) - 1024;
-	int16_t right_stick_y = (((remote_buffer[1] >> 3) | (remote_buffer[2] << 5)) & 0x07ff) - 1024;
-	int16_t left_stick_x = (((remote_buffer[2] >> 6) | (remote_buffer[3] << 2) | (remote_buffer[4] << 10)) & 0x07ff) - 1024;
-	int16_t left_stick_y = (((remote_buffer[4] >> 1) | (remote_buffer[5] << 7)) & 0x07ff) - 1024;
-	int16_t wheel = ((remote_buffer[6] | (remote_buffer[7] << 8)) & 0x07FF) - 1024;
-	int16_t left_switch = ((remote_buffer[5] >> 4) & 0x000C) >> 2;
-	int16_t right_switch = ((remote_buffer[5] >> 4) & 0x0003);
-    uint8_t online = remote_buffer[7] & 0b00010000;
-    // RCLCPP_INFO(this->get_logger(), "[x: %d, y: %d], r: %d, [x: %d, y: %d], l: %d, w: %d, gyro: [x: %f, y: %f, z: %f], accel: [x: %f, y: %f, z: %f]", right_stick_x, right_stick_y, right_switch, left_stick_x, left_stick_y, left_switch, wheel, decoded_data.gyro[0], decoded_data.gyro[1], decoded_data.gyro[2], decoded_data.accel[0], decoded_data.accel[1], decoded_data.accel[2]);
+    static int print_serial_count = 0;
+    print_serial_count++;
+    if (print_serial_count >= 5000)
+    {
+        print_serial_count = 0;
+        RCLCPP_INFO(this->get_logger(), "%s", hex_stream.str().c_str());
+        int16_t right_stick_x = ((remote_buffer[0] | (remote_buffer[1] << 8)) & 0x07ff) - 1024;
+        int16_t right_stick_y = (((remote_buffer[1] >> 3) | (remote_buffer[2] << 5)) & 0x07ff) - 1024;
+        int16_t left_stick_x = (((remote_buffer[2] >> 6) | (remote_buffer[3] << 2) | (remote_buffer[4] << 10)) & 0x07ff) - 1024;
+        int16_t left_stick_y = (((remote_buffer[4] >> 1) | (remote_buffer[5] << 7)) & 0x07ff) - 1024;
+        int16_t wheel = ((remote_buffer[6] | (remote_buffer[7] << 8)) & 0x07FF) - 1024;
+        int16_t left_switch = ((remote_buffer[5] >> 4) & 0x000C) >> 2;
+        int16_t right_switch = ((remote_buffer[5] >> 4) & 0x0003);
+        uint8_t online = (remote_buffer[7] & 0b00010000) >> 4;
+        RCLCPP_INFO(this->get_logger(), "[x: %d, y: %d], r: %d, [x: %d, y: %d], l: %d, w: %d, gyro: [x: %3f, y: %3f, z: %3f], accel: [x: %3f, y: %3f, z: %3f], online: %d",
+                    right_stick_x, right_stick_y, right_switch, left_stick_x, left_stick_y, left_switch, wheel,
+                    decoded_data.gyro[0], decoded_data.gyro[1], decoded_data.gyro[2], decoded_data.accel[0], decoded_data.accel[1], decoded_data.accel[2], online);
+    }
 }
 
 int main(int argc, char *argv[])
