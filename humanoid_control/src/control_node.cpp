@@ -95,7 +95,7 @@ private:
 
         // Publish the JointState message as motor commands
         motor_command_publisher_->publish(motor_command_msg);
-        RCLCPP_INFO(this->get_logger(), "Published motor commands for all joints.");
+        // RCLCPP_INFO(this->get_logger(), "Published motor commands for all joints.");
     }
 
     // Data structure to store the latest feedback for each motor
