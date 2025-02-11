@@ -16,19 +16,6 @@ def generate_launch_description():
         description='Path to the parameter file for the motor control node'
     )
 
-    # # Path to the fdcan_setup.sh script
-    # script_path = os.path.join(
-    #     get_package_share_directory('humanoid_hardware'),
-    #     'script',
-    #     'fdcan_setup.sh'
-    # )
-
-    # # Execute the fdcan_setup.sh script before starting nodes
-    # fdcan_setup_process = ExecuteProcess(
-    #     cmd=['bash', script_path],
-    #     name='fdcan_setup',
-    #     output='screen'
-    # )
 
     # Node to control the motor
     motor_ctrl_node = Node(
@@ -54,7 +41,6 @@ def generate_launch_description():
 
     # Add actions to the launch description
     ld.add_action(param_file_arg)
-    # ld.add_action(fdcan_setup_process)
     ld.add_action(motor_ctrl_node)
     ld.add_action(serial_node)
     # ld.add_action(control_node)

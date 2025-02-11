@@ -47,9 +47,15 @@ def generate_launch_description():
 
     # Node to send motor commands and form joint_states for visualization
     control_node = Node(
-        package="humanoid_control",
-        executable="ControlNode",
-        name="control_node",
+        package="humanoid_hardware",
+        executable="MotorAbstractionNode",
+        name="motor_abstraction_node",
+    )
+
+    motor_abstraction_node = Node(
+        package="humanoid_hardware",
+        executable="MotorAbstractionNode",
+        name="motor_abstraction_node",
     )
 
     # URDF Path for robot_state_publisher
@@ -76,8 +82,8 @@ def generate_launch_description():
 
     # Add actions to the launch description
     ld.add_action(param_file_arg)
-    # ld.add_action(fdcan_setup_process)  # Uncomment if fdcan_setup script is needed
     ld.add_action(motor_ctrl_node)
+    ld.add_action(motor_abstraction_node)
     ld.add_action(serial_node)
     ld.add_action(control_node)
     ld.add_action(robot_state_publisher_node)

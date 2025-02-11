@@ -1,5 +1,5 @@
 #include "humanoid_hardware/MotorCtrlNode.hpp"
-#include <iomanip> 
+#include <iomanip>
 
 MotorControlNode::MotorControlNode() : Node("motor_control_node"), running_(true)
 {
@@ -13,11 +13,10 @@ MotorControlNode::MotorControlNode() : Node("motor_control_node"), running_(true
 
     // Load command and feedback CAN IDs, kp, and kd values
     std::vector<std::string> motor_names = {
-            "left_hip_yaw_joint", "left_hip_roll_joint", "left_hip_pitch_joint",
-            "left_knee_joint", "left_ankle_joint",
-            "right_hip_yaw_joint", "right_hip_roll_joint", "right_hip_pitch_joint",
-            "right_knee_joint", "right_ankle_joint"
-        };
+        "left_hip_yaw_joint", "left_hip_roll_joint", "left_hip_pitch_joint",
+        "left_knee_joint", "left_ankle_joint",
+        "right_hip_yaw_joint", "right_hip_roll_joint", "right_hip_pitch_joint",
+        "right_knee_joint", "right_ankle_joint"};
 
     for (const auto &motor : motor_names)
     {
@@ -41,12 +40,11 @@ MotorControlNode::MotorControlNode() : Node("motor_control_node"), running_(true
 
     // Initialize motors and ROS 2 interfaces
     motor_feedback_pub_ = this->create_publisher<humanoid_interfaces::msg::MotorFeedback>("humanoid_interfaces/motor_feedback", 10);
-    
+
     // Subscribe to JointState messages for all motor commands
     motor_command_sub_ = this->create_subscription<sensor_msgs::msg::JointState>(
         "humanoid_interfaces/motor_commands", 10,
         std::bind(&MotorControlNode::motor_command_callback, this, std::placeholders::_1));
-    
 
     // Start CAN receiver thread
     receiver_thread_ = std::thread(&MotorControlNode::can_receive, this);
@@ -88,6 +86,14 @@ int MotorControlNode::can_init(const char *interface)
         RCLCPP_ERROR(this->get_logger(), "Error enabling CAN FD support: %s", strerror(errno));
         close(socket_fd);
         return -1;
+    }
+
+    struct timeval timeout;
+    timeout.tv_sec = 1;  // Timeout in seconds
+
+    if (setsockopt(socket_fd_, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout)) < 0)
+    {
+        RCLCPP_ERROR(this->get_logger(), "Failed to set socket receive timeout: %s", strerror(errno));
     }
 
     struct ifreq ifr;
@@ -158,7 +164,7 @@ void MotorControlNode::can_receive()
             // Find the motor associated with the received feedback CAN ID
             auto motor_it = std::find_if(motors_.begin(), motors_.end(), [&](DaMiaoMotor &motor)
                                          { return motor.getFeedbackCanId() == frame.can_id; });
-            
+
             if (motor_it != motors_.end())
             {
                 // RCLCPP_INFO(this->get_logger(), "Processing feedback for motor: %s", motor_it->getName().c_str());
@@ -176,7 +182,7 @@ void MotorControlNode::can_receive()
 
                 // Publish the feedback
                 motor_feedback_pub_->publish(feedback_msg);
-                // RCLCPP_INFO(this->get_logger(), "Published feedback for motor %s", feedback_msg.motor_name.c_str());
+                RCLCPP_INFO(this->get_logger(), "Published feedback for motor %s", feedback_msg.motor_name.c_str());
             }
             else
             {
@@ -186,14 +192,13 @@ void MotorControlNode::can_receive()
     }
 }
 
-
-
 void MotorControlNode::motor_command_callback(const sensor_msgs::msg::JointState::SharedPtr msg)
 {
-    // RCLCPP_INFO(this->get_logger(), "Received joint commands for all motors");
+    RCLCPP_INFO(this->get_logger(), "Received joint commands for all motors");
 
     // Ensure all arrays (name, position, velocity, effort) have the same length
-    if (msg->name.size() != msg->position.size() || msg->name.size() != msg->velocity.size() || msg->name.size() != msg->effort.size()) {
+    if (msg->name.size() != msg->position.size() || msg->name.size() != msg->velocity.size() || msg->name.size() != msg->effort.size())
+    {
         RCLCPP_ERROR(this->get_logger(), "JointState message arrays are of unequal length");
         return;
     }
@@ -204,10 +209,10 @@ void MotorControlNode::motor_command_callback(const sensor_msgs::msg::JointState
         const auto &motor_name = msg->name[i];
         auto motor_it = std::find_if(motors_.begin(), motors_.end(), [&](DaMiaoMotor &motor)
                                      { return motor.getName() == motor_name; });
-        
+
         if (motor_it != motors_.end())
         {
-            // RCLCPP_INFO(this->get_logger(), "Found motor: %s", motor_it->getName().c_str());
+            RCLCPP_INFO(this->get_logger(), "Found motor: %s", motor_it->getName().c_str());
             motor_it->set_cmd(msg->position[i], msg->velocity[i], msg->effort[i], 0.0, 0.0); // Example kp, kd values
 
             uint8_t cmd_data[8];

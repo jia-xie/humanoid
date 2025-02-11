@@ -33,6 +33,10 @@ add_executable(SerialNode
     src/SerialNode.cpp
 )
 
+add_executable(MotorAbstractionNode
+    src/MotorAbstractionNode.cpp
+)
+
 ament_target_dependencies(MotorCtrlNode
     rclcpp
     sensor_msgs
@@ -43,10 +47,17 @@ ament_target_dependencies(SerialNode
     rclcpp
 )
 
+ament_target_dependencies(MotorAbstractionNode
+    rclcpp
+    humanoid_interfaces
+    sensor_msgs
+)
+
 install (
     TARGETS
     MotorCtrlNode
     SerialNode
+    MotorAbstractionNode
     DESTINATION lib/${PROJECT_NAME}
 )
 

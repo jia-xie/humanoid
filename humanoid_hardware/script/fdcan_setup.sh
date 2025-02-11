@@ -44,7 +44,6 @@ cansend can0 7FF#0800552309000000
 
 sleep 0.2
 
-
 cansend can0 000#FFFFFFFFFFFFFFFC
 sleep 0.1
 cansend can0 001#FFFFFFFFFFFFFFFC
