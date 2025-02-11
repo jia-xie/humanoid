@@ -182,7 +182,7 @@ void MotorControlNode::can_receive()
 
                 // Publish the feedback
                 motor_feedback_pub_->publish(feedback_msg);
-                RCLCPP_INFO(this->get_logger(), "Published feedback for motor %s", feedback_msg.motor_name.c_str());
+                // RCLCPP_INFO(this->get_logger(), "Published feedback for motor %s", feedback_msg.motor_name.c_str());
             }
             else
             {
@@ -194,7 +194,7 @@ void MotorControlNode::can_receive()
 
 void MotorControlNode::motor_command_callback(const sensor_msgs::msg::JointState::SharedPtr msg)
 {
-    RCLCPP_INFO(this->get_logger(), "Received joint commands for all motors");
+    // RCLCPP_INFO(this->get_logger(), "Received joint commands for all motors");
 
     // Ensure all arrays (name, position, velocity, effort) have the same length
     if (msg->name.size() != msg->position.size() || msg->name.size() != msg->velocity.size() || msg->name.size() != msg->effort.size())
@@ -212,7 +212,7 @@ void MotorControlNode::motor_command_callback(const sensor_msgs::msg::JointState
 
         if (motor_it != motors_.end())
         {
-            RCLCPP_INFO(this->get_logger(), "Found motor: %s", motor_it->getName().c_str());
+            // RCLCPP_INFO(this->get_logger(), "Found motor: %s", motor_it->getName().c_str());
             motor_it->set_cmd(msg->position[i], msg->velocity[i], msg->effort[i], 0.0, 0.0); // Example kp, kd values
 
             uint8_t cmd_data[8];

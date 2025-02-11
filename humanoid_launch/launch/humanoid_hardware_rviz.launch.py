@@ -46,11 +46,11 @@ def generate_launch_description():
     )
 
     # Node to send motor commands and form joint_states for visualization
-    control_node = Node(
-        package="humanoid_hardware",
-        executable="MotorAbstractionNode",
-        name="motor_abstraction_node",
-    )
+    # control_node = Node(
+    #     package="humanoid_hardware",
+    #     executable="ControlNode",
+    #     name="control_node",
+    # )
 
     motor_abstraction_node = Node(
         package="humanoid_hardware",
@@ -85,7 +85,6 @@ def generate_launch_description():
     ld.add_action(motor_ctrl_node)
     ld.add_action(motor_abstraction_node)
     ld.add_action(serial_node)
-    ld.add_action(control_node)
     ld.add_action(robot_state_publisher_node)
     # ld.add_action(joint_state_publisher_node)
     

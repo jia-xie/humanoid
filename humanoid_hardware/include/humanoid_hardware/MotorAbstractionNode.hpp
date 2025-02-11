@@ -14,6 +14,7 @@ private:
     void publish_rviz_joint_states(); //publish joint states for rviz2 visualization
     void process_motor_stats(humanoid_interfaces::msg::MotorFeedback::SharedPtr motor_feedback);
     void dispatch_motor_commands();
+    void control_loop();
     rclcpp::Subscription<humanoid_interfaces::msg::MotorFeedback>::SharedPtr motor_feedback_sub_; // this subscriber will get motor feedback data from motor control node
     rclcpp::Publisher<sensor_msgs::msg::JointState>::SharedPtr motor_command_pub_;
     rclcpp::Publisher<sensor_msgs::msg::JointState>::SharedPtr rviz_joint_state_pub_;
@@ -34,4 +35,5 @@ private:
     // Timers
     rclcpp::TimerBase::SharedPtr publish_rviz_joint_state_timer_;
     rclcpp::TimerBase::SharedPtr dispatch_motor_commands_timer_;
+    rclcpp::TimerBase::SharedPtr control_loop_timer_;
 };

@@ -18,10 +18,18 @@ MotorAbstractionNode::MotorAbstractionNode() : Node("motor_abstraction_node")
     dispatch_motor_commands_timer_ = this->create_wall_timer(
             std::chrono::milliseconds(100), // 10 Hz
             std::bind(&MotorAbstractionNode::dispatch_motor_commands, this));
+    control_loop_timer_ = this->create_wall_timer(
+            std::chrono::milliseconds(100), // 10 Hz
+            std::bind(&MotorAbstractionNode::control_loop, this));
 }
 
 MotorAbstractionNode::~MotorAbstractionNode()
 {
+}
+
+void MotorAbstractionNode::control_loop()
+{
+
 }
 
 /**
@@ -89,28 +97,6 @@ void MotorAbstractionNode::dispatch_motor_commands()
 
     motor_command_pub_->publish(motor_command_msg);
 }
-
-    // void publishMotorCommands()
-    // {
-    //     auto motor_command_msg = sensor_msgs::msg::JointState();
-    //     motor_command_msg.header.stamp = this->get_clock()->now();
-
-    //     // Lock the data to ensure thread safety
-    //     std::lock_guard<std::mutex> lock(data_mutex_);
-
-    //     // Fill the JointState message with names, desired positions, velocities, and efforts (for control)
-    //     for (const auto &entry : motor_data_)
-    //     {
-    //         motor_command_msg.name.push_back(entry.first);
-    //         motor_command_msg.position.push_back(0.0);  // Example desired position
-    //         motor_command_msg.velocity.push_back(0.0);  // Example desired velocity
-    //         motor_command_msg.effort.push_back(0.0);    // Example desired torque
-    //     }
-
-    //     // Publish the JointState message as motor commands
-    //     motor_command_publisher_->publish(motor_command_msg);
-    //     // RCLCPP_INFO(this->get_logger(), "Published motor commands for all joints.");
-    // }
 
 /**
  * This is the callback function of wall timer to publish the joint states to rviz2 for visualization

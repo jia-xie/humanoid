@@ -25,6 +25,7 @@ SerialNode::SerialNode() : Node("serial_node")
     timer_ = this->create_wall_timer(
         std::chrono::microseconds(reading_period_us),
         std::bind(&SerialNode::readDataCallback, this));
+    remote_signal_pub_ = this->create_publisher<humanoid_interfaces::msg::RemoteSignal>("/remote_signal", 10);
 }
 
 SerialNode::~SerialNode()
@@ -185,12 +186,19 @@ void SerialNode::readDataCallback()
 
     uint8_t remote_buffer[8];
     memcpy(remote_buffer, buffer + 25, 8);
-    // hex_stream << "Received message: ";
-    for (int i = 0; i < 8; ++i)
-    {
-        hex_stream << std::uppercase << std::hex << std::setw(2) << std::setfill('0')
-                   << static_cast<int>(remote_buffer[i]) << " ";
-    }
+    
+    // Decode and Publish the remote signal message
+    auto remote_signal_msg = humanoid_interfaces::msg::RemoteSignal();
+    // remote_signal_msg.header.stamp = this->get_clock()->now();
+    remote_signal_msg.right_stick_x = (((remote_buffer[0] | (remote_buffer[1] << 8)) & 0x07ff) - 1024)/660.0f;
+    remote_signal_msg.right_stick_y = ((((remote_buffer[1] >> 3) | (remote_buffer[2] << 5)) & 0x07ff) - 1024)/660.0f;
+    remote_signal_msg.left_stick_x = ((((remote_buffer[2] >> 6) | (remote_buffer[3] << 2) | (remote_buffer[4] << 10)) & 0x07ff) - 1024)/660.0f;
+    remote_signal_msg.left_stick_y = ((((remote_buffer[4] >> 1) | (remote_buffer[5] << 7)) & 0x07ff) - 1024)/660.0f;
+    remote_signal_msg.wheel = ((remote_buffer[6] | (remote_buffer[7] << 8)) & 0x07FF) - 1024;
+    remote_signal_msg.left_switch = ((remote_buffer[5] >> 4) & 0x000C) >> 2;
+    remote_signal_msg.right_switch = ((remote_buffer[5] >> 4) & 0x0003);
+    remote_signal_msg.online = (remote_buffer[7] & 0b00010000) >> 4;
+    remote_signal_pub_->publish(remote_signal_msg);
     static int print_serial_count = 0;
     print_serial_count++;
     if (print_serial_count >= 5000)
@@ -205,6 +213,7 @@ void SerialNode::readDataCallback()
         int16_t left_switch = ((remote_buffer[5] >> 4) & 0x000C) >> 2;
         int16_t right_switch = ((remote_buffer[5] >> 4) & 0x0003);
         uint8_t online = (remote_buffer[7] & 0b00010000) >> 4;
+        
         RCLCPP_INFO(this->get_logger(), "[x: %d, y: %d], r: %d, [x: %d, y: %d], l: %d, w: %d, gyro: [x: %3f, y: %3f, z: %3f], accel: [x: %3f, y: %3f, z: %3f], online: %d",
                     right_stick_x, right_stick_y, right_switch, left_stick_x, left_stick_y, left_switch, wheel,
                     decoded_data.gyro[0], decoded_data.gyro[1], decoded_data.gyro[2], decoded_data.accel[0], decoded_data.accel[1], decoded_data.accel[2], online);

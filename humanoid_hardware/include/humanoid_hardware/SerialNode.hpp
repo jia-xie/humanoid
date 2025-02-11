@@ -5,6 +5,7 @@
 #include <vector>
 #include <array>
 #include <string>
+#include <humanoid_interfaces/msg/remote_signal.hpp>
 
 class SerialNode : public rclcpp::Node {
 public:
@@ -14,6 +15,7 @@ public:
 private:
     int serial_port_;
     rclcpp::TimerBase::SharedPtr timer_;
+    rclcpp::Publisher<humanoid_interfaces::msg::RemoteSignal>::SharedPtr remote_signal_pub_;
     void readDataCallback();
     bool setupSerialPort(const std::string &port, int baud_rate);
     std::chrono::steady_clock::time_point last_frame_time_;
