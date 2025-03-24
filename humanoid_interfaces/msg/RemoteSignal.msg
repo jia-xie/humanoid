@@ -7,7 +7,7 @@ uint8 left_switch
 uint8 right_switch
 uint8 online
 
-# Constant Value for Remote Stick
-uint8 STICK_UP = 1
-uint8 STICK_MID = 3
-uint8 STICK_DOWN = 2
+# Constant Value for Remote SWITCH
+uint8 SWITCH_UP = 1
+uint8 SWITCH_MID = 3
+uint8 SWITCH_DOWN = 2

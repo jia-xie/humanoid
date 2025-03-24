@@ -51,11 +51,17 @@ public:
 
     void set_cmd(float target_pos, float target_vel, float target_torq);
     void set_cmd(float target_pos, float target_vel, float target_torq, float kp, float kd);
+    void set_kp(float kp);
+    void set_kd(float kd);
     void encode_cmd_msg(uint8_t data[8]);
+    void encode_enable_msg(uint8_t data[8]);
+    void encode_disable_msg(uint8_t data[8]);
     void decode_sensor_feedback(uint8_t data[8]);
 
     uint16_t getCmdCanId() const { return cmd_can_id_; }
     uint16_t getFeedbackCanId() const { return feedback_can_id_; }
+    float getKp() const { return cmd_msg_.kp; }
+    float getKd() const { return cmd_msg_.kd; }
     std::string getName() const { return name_; }
     const cmd_msg &getCmdMsg() const { return cmd_msg_; }
     const sensor_feedback &getSensorFeedback() const { return sensor_feedback_; }

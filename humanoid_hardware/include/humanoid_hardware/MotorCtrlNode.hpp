@@ -18,6 +18,7 @@
 #include "humanoid_interfaces/msg/motor_command.hpp"
 #include "humanoid_interfaces/msg/motor_feedback.hpp"
 #include "sensor_msgs/msg/joint_state.hpp"
+#include "humanoid_interfaces/msg/robot_state.hpp"
 
 class MotorControlNode : public rclcpp::Node {
 public:
@@ -33,9 +34,12 @@ private:
     // Function to send motor commands
     void motor_command_callback(const sensor_msgs::msg::JointState::SharedPtr msg);
 
+    void robot_state_callback(const humanoid_interfaces::msg::RobotState::SharedPtr msg);
+
     // ROS 2 Publishers and Subscribers
     rclcpp::Publisher<humanoid_interfaces::msg::MotorFeedback>::SharedPtr motor_feedback_pub_;
     rclcpp::Subscription<sensor_msgs::msg::JointState>::SharedPtr motor_command_sub_;
+    rclcpp::Subscription<humanoid_interfaces::msg::RobotState>::SharedPtr robot_state_sub_;
 
     // Thread management
     std::thread receiver_thread_;
@@ -44,6 +48,7 @@ private:
     // Member variables
     int socket_fd_;
     std::vector<DaMiaoMotor> motors_;
+    int robot_enabled;
 };
 
 #endif // MOTOR_CTRL_NODE_HPP

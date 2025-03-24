@@ -26,21 +26,21 @@ cansend can0 006#FFFFFFFFFFFFFFFD
 cansend can0 007#FFFFFFFFFFFFFFFD
 cansend can0 008#FFFFFFFFFFFFFFFD
 
-cansend can0 7FF#0100552309000000
-sleep 0.1
-cansend can0 7FF#0200552309000000
-sleep 0.1
-cansend can0 7FF#0300552309000000
-sleep 0.1
-cansend can0 7FF#0400552309000000
-sleep 0.1
-cansend can0 7FF#0500552309000000
-sleep 0.1
-cansend can0 7FF#0600552309000000
-sleep 0.1
-cansend can0 7FF#0700552309000000
-sleep 0.1
-cansend can0 7FF#0800552309000000
+# cansend can0 7FF#0100552309000000
+# sleep 0.1
+# cansend can0 7FF#0200552309000000
+# sleep 0.1
+# cansend can0 7FF#0300552309000000
+# sleep 0.1
+# cansend can0 7FF#0400552309000000
+# sleep 0.1
+# cansend can0 7FF#0500552309000000
+# sleep 0.1
+# cansend can0 7FF#0600552309000000
+# sleep 0.1
+# cansend can0 7FF#0700552309000000
+# sleep 0.1
+# cansend can0 7FF#0800552309000000
 
 sleep 0.2
 

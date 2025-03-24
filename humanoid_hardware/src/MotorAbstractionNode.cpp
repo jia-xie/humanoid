@@ -10,26 +10,52 @@ MotorAbstractionNode::MotorAbstractionNode() : Node("motor_abstraction_node")
         std::bind(&MotorAbstractionNode::process_motor_stats, this, std::placeholders::_1));
     motor_command_pub_ = this->create_publisher<sensor_msgs::msg::JointState>("humanoid_interfaces/motor_commands", 10);
     rviz_joint_state_pub_ = this->create_publisher<sensor_msgs::msg::JointState>("/joint_states", 10);
-
+    remote_signal_sub_ = this->create_subscription<humanoid_interfaces::msg::RemoteSignal>(
+        "/remote_signal", 10,
+        std::bind(&MotorAbstractionNode::process_remote_signal, this, std::placeholders::_1));
+    robot_state_pub_ = this->create_publisher<humanoid_interfaces::msg::RobotState>("/robot_state", 10);
     // create a timers
     publish_rviz_joint_state_timer_ = this->create_wall_timer(
-            std::chrono::milliseconds(100), // 10 Hz
-            std::bind(&MotorAbstractionNode::publish_rviz_joint_states, this));
+        std::chrono::milliseconds(100), // 10 Hz
+        std::bind(&MotorAbstractionNode::publish_rviz_joint_states, this));
     dispatch_motor_commands_timer_ = this->create_wall_timer(
-            std::chrono::milliseconds(100), // 10 Hz
-            std::bind(&MotorAbstractionNode::dispatch_motor_commands, this));
+        std::chrono::milliseconds(10), // 10 Hz
+        std::bind(&MotorAbstractionNode::dispatch_motor_commands, this));
     control_loop_timer_ = this->create_wall_timer(
-            std::chrono::milliseconds(100), // 10 Hz
-            std::bind(&MotorAbstractionNode::control_loop, this));
+        std::chrono::milliseconds(2), // 10 Hz
+        std::bind(&MotorAbstractionNode::control_loop, this));
 }
 
 MotorAbstractionNode::~MotorAbstractionNode()
 {
 }
 
+void MotorAbstractionNode::process_remote_signal(humanoid_interfaces::msg::RemoteSignal::SharedPtr remote_signal)
+{
+    auto robot_state_msg = humanoid_interfaces::msg::RobotState();
+    if (remote_signal->online && (remote_signal->right_switch != humanoid_interfaces::msg::RemoteSignal::SWITCH_DOWN))
+    {
+        
+        robot_state_msg.enabled = true;
+        motor_commands_["left_hip_pitch_joint"].position = remote_signal->left_stick_y+0.5;
+        motor_commands_["right_hip_pitch_joint"].position = remote_signal->right_stick_y+0.5;
+        motor_commands_["left_hip_roll_joint"].position = -remote_signal->left_stick_x;
+        motor_commands_["right_hip_roll_joint"].position = -remote_signal->right_stick_x;
+    }
+    else
+    {
+        robot_state_msg.enabled = false;
+        for (const auto &motor_name : motor_names)
+        {
+            motor_stats_[motor_name] = {0.0, 0.0, 0.0};    // Default position, velocity, and effort
+            motor_commands_[motor_name] = {0.0, 0.0, 0.0}; // Default position, velocity, and effort
+        }
+    }
+    robot_state_pub_->publish(robot_state_msg);
+}
+
 void MotorAbstractionNode::control_loop()
 {
-
 }
 
 /**
@@ -44,15 +70,15 @@ void MotorAbstractionNode::allocate_motor_data()
 
     for (const auto &motor_name : motor_names)
     {
-        motor_stats_[motor_name] = {0.0, 0.0, 0.0}; // Default position, velocity, and effort
+        motor_stats_[motor_name] = {0.0, 0.0, 0.0};    // Default position, velocity, and effort
         motor_commands_[motor_name] = {0.0, 0.0, 0.0}; // Default position, velocity, and effort
     }
 }
 
 /**
- * Process the raw motor feedback data from the motor control node and process it such that matches 
+ * Process the raw motor feedback data from the motor control node and process it such that matches
  * URDF description. The stored data aligns with rviz2 visualization
- * 
+ *
  * @param motor_feedback The raw motor feedback data from the motor control node, it contains the original
  * information from the motor communication protocol (CAN bus)
  */

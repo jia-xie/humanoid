@@ -25,25 +25,25 @@ motor_ctrl_node:
         right_ankle_joint: 0x66
 
       kp:
-        left_hip_pitch_joint: .0
-        left_knee_joint: .0
-        right_hip_pitch_joint: .0
-        right_knee_joint: .0
-        left_hip_yaw_joint: .0
-        left_hip_roll_joint: .0
-        right_hip_yaw_joint: .0
-        right_hip_roll_joint: .0
+        left_hip_pitch_joint: 60.0
+        left_knee_joint: 60.0
+        right_hip_pitch_joint: 60.0
+        right_knee_joint: 60.0
+        left_hip_yaw_joint: 50.0
+        left_hip_roll_joint: 50.0
+        right_hip_yaw_joint: 50.0
+        right_hip_roll_joint: 50.0
         left_ankle_joint: .0
         right_ankle_joint: .0
 
       kd:
-        left_hip_pitch_joint: .0
-        left_knee_joint: .0
-        right_hip_pitch_joint: .0
-        right_knee_joint: .0
-        left_hip_yaw_joint: .0
-        left_hip_roll_joint: .0
-        right_hip_yaw_joint: .0
-        right_hip_roll_joint: .0
+        left_hip_pitch_joint: 1.0
+        left_knee_joint: 1.0
+        right_hip_pitch_joint: 1.0
+        right_knee_joint: 1.0
+        left_hip_yaw_joint: .5
+        left_hip_roll_joint: .5
+        right_hip_yaw_joint: .5
+        right_hip_roll_joint: .5
         left_ankle_joint: .0
         right_ankle_joint: .0

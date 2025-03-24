@@ -2,6 +2,8 @@
 #include "humanoid_interfaces/msg/motor_feedback.hpp"
 #include "sensor_msgs/msg/joint_state.hpp" // this is for rviz (publisher variable joint_state_pub_)
 #include "humanoid_interfaces/msg/motor_command.hpp"
+#include "humanoid_interfaces/msg/remote_signal.hpp"
+#include "humanoid_interfaces/msg/robot_state.hpp"
 
 class MotorAbstractionNode : public rclcpp::Node
 {
@@ -15,9 +17,13 @@ private:
     void process_motor_stats(humanoid_interfaces::msg::MotorFeedback::SharedPtr motor_feedback);
     void dispatch_motor_commands();
     void control_loop();
+    void process_remote_signal(humanoid_interfaces::msg::RemoteSignal::SharedPtr remote_signal);
+
     rclcpp::Subscription<humanoid_interfaces::msg::MotorFeedback>::SharedPtr motor_feedback_sub_; // this subscriber will get motor feedback data from motor control node
     rclcpp::Publisher<sensor_msgs::msg::JointState>::SharedPtr motor_command_pub_;
     rclcpp::Publisher<sensor_msgs::msg::JointState>::SharedPtr rviz_joint_state_pub_;
+    rclcpp::Subscription<humanoid_interfaces::msg::RemoteSignal>::SharedPtr remote_signal_sub_;
+    rclcpp::Publisher<humanoid_interfaces::msg::RobotState>::SharedPtr robot_state_pub_;
 
     std::vector<std::string> motor_names;
     // Data structure to store the latest data (feedback from motor and command that will be sent out)

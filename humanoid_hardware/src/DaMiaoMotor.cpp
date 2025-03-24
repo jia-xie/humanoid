@@ -17,6 +17,30 @@ void DaMiaoMotor::encode_cmd_msg(uint8_t data[8]) {
     data[7] = torq_temp;
 }
 
+void DaMiaoMotor::encode_enable_msg(uint8_t data[8])
+{
+    data[0] = 0xFF;
+    data[1] = 0xFF;
+    data[2] = 0xFF;
+    data[3] = 0xFF;
+    data[4] = 0xFF;
+    data[5] = 0xFF;
+    data[6] = 0xFF;
+    data[7] = 0xFC;
+}
+
+void DaMiaoMotor::encode_disable_msg(uint8_t data[8])
+{
+    data[0] = 0xFF;
+    data[1] = 0xFF;
+    data[2] = 0xFF;
+    data[3] = 0xFF;
+    data[4] = 0xFF;
+    data[5] = 0xFF;
+    data[6] = 0xFF;
+    data[7] = 0xFD;
+}
+
 void DaMiaoMotor::decode_sensor_feedback(uint8_t data[8]) {
     sensor_feedback_.can_id = (data[0]) & 0x0F;
     sensor_feedback_.state = (data[0]) >> 4;
@@ -44,3 +68,10 @@ void DaMiaoMotor::set_cmd(float target_pos, float target_vel, float target_torq,
     cmd_msg_.kd = kd;
 }
 
+void DaMiaoMotor::set_kp(float kp) {
+    cmd_msg_.kp = kp;
+}
+
+void DaMiaoMotor::set_kd(float kd) {
+    cmd_msg_.kd = kd;
+}

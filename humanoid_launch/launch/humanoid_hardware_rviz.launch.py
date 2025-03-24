@@ -16,19 +16,12 @@ def generate_launch_description():
         description='Path to the parameter file for the motor control node'
     )
 
-    # # Path to the fdcan_setup.sh script (commented out for now)
-    # script_path = os.path.join(
-    #     get_package_share_directory('humanoid_hardware'),
-    #     'script',
-    #     'fdcan_setup.sh'
-    # )
-    
-    # # Execute the fdcan_setup.sh script before starting nodes
-    # fdcan_setup_process = ExecuteProcess(
-    #     cmd=['bash', script_path],
-    #     name='fdcan_setup',
-    #     output='screen'
-    # )
+    # Path to RViz configuration file
+    rviz_config_path = os.path.join(
+        get_package_share_directory('humanoid_launch'),
+        'rviz',
+        'humanoid_config.rviz'  # Update this with your actual RViz config file name
+    )
 
     # Node to control the motor
     motor_ctrl_node = Node(
@@ -44,13 +37,6 @@ def generate_launch_description():
         executable="SerialNode",
         name="serial_node",
     )
-
-    # Node to send motor commands and form joint_states for visualization
-    # control_node = Node(
-    #     package="humanoid_hardware",
-    #     executable="ControlNode",
-    #     name="control_node",
-    # )
 
     motor_abstraction_node = Node(
         package="humanoid_hardware",
@@ -73,12 +59,14 @@ def generate_launch_description():
         parameters=[{'robot_description': Command(['xacro ', urdf_path])}]
     )
 
-    # Node for joint state publishing (for visualization)
-    # joint_state_publisher_node = Node(
-    #     package="joint_state_publisher",
-    #     executable="joint_state_publisher",
-    #     name="joint_state_publisher"
-    # )
+    # Node to launch RViz
+    rviz_node = Node(
+        package="rviz2",
+        executable="rviz2",
+        name="rviz2",
+        arguments=["-d", rviz_config_path],
+        output="screen"
+    )
 
     # Add actions to the launch description
     ld.add_action(param_file_arg)
@@ -86,6 +74,6 @@ def generate_launch_description():
     ld.add_action(motor_abstraction_node)
     ld.add_action(serial_node)
     ld.add_action(robot_state_publisher_node)
-    # ld.add_action(joint_state_publisher_node)
+    # ld.add_action(rviz_node)
     
     return ld
