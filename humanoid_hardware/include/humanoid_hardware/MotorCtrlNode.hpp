@@ -49,6 +49,7 @@ private:
     int socket_fd_;
     std::vector<DaMiaoMotor> motors_;
     int robot_enabled;
+    std::vector<std::string> motor_names;
 };
 
 #endif // MOTOR_CTRL_NODE_HPP

@@ -68,12 +68,19 @@ def generate_launch_description():
         output="screen"
     )
 
+    policy_node = Node(
+        package="humanoid_control",
+        executable="policy_node.py",
+        name="policy",
+    )
+
     # Add actions to the launch description
     ld.add_action(param_file_arg)
     ld.add_action(motor_ctrl_node)
     ld.add_action(motor_abstraction_node)
     ld.add_action(serial_node)
     ld.add_action(robot_state_publisher_node)
+    ld.add_action(policy_node)
     # ld.add_action(rviz_node)
     
     return ld

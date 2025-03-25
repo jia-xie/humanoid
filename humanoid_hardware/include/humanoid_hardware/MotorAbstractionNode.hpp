@@ -4,6 +4,7 @@
 #include "humanoid_interfaces/msg/motor_command.hpp"
 #include "humanoid_interfaces/msg/remote_signal.hpp"
 #include "humanoid_interfaces/msg/robot_state.hpp"
+#include "std_msgs/msg/float64.hpp"
 
 class MotorAbstractionNode : public rclcpp::Node
 {
@@ -24,7 +25,7 @@ private:
     rclcpp::Publisher<sensor_msgs::msg::JointState>::SharedPtr rviz_joint_state_pub_;
     rclcpp::Subscription<humanoid_interfaces::msg::RemoteSignal>::SharedPtr remote_signal_sub_;
     rclcpp::Publisher<humanoid_interfaces::msg::RobotState>::SharedPtr robot_state_pub_;
-
+    rclcpp::Publisher<std_msgs::msg::Float64>::SharedPtr test_publisher_;
     std::vector<std::string> motor_names;
     // Data structure to store the latest data (feedback from motor and command that will be sent out)
     struct MotorData
@@ -37,6 +38,8 @@ private:
     std::mutex motor_stats_mutex_;
     std::unordered_map<std::string, MotorData> motor_commands_;
     std::mutex motor_commands_mutex_;
+    humanoid_interfaces::msg::RobotState robot_state_msg_;
+    
 
     // Timers
     rclcpp::TimerBase::SharedPtr publish_rviz_joint_state_timer_;

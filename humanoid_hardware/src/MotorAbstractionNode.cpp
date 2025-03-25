@@ -6,9 +6,9 @@ MotorAbstractionNode::MotorAbstractionNode() : Node("motor_abstraction_node")
 
     // create subscribers and publishers
     motor_feedback_sub_ = this->create_subscription<humanoid_interfaces::msg::MotorFeedback>(
-        "humanoid_interfaces/motor_feedback", 10,
+        "humanoid_interfaces/motor_feedback", 1,
         std::bind(&MotorAbstractionNode::process_motor_stats, this, std::placeholders::_1));
-    motor_command_pub_ = this->create_publisher<sensor_msgs::msg::JointState>("humanoid_interfaces/motor_commands", 10);
+    motor_command_pub_ = this->create_publisher<sensor_msgs::msg::JointState>("humanoid_interfaces/motor_commands", 1);
     rviz_joint_state_pub_ = this->create_publisher<sensor_msgs::msg::JointState>("/joint_states", 10);
     remote_signal_sub_ = this->create_subscription<humanoid_interfaces::msg::RemoteSignal>(
         "/remote_signal", 10,
@@ -19,11 +19,11 @@ MotorAbstractionNode::MotorAbstractionNode() : Node("motor_abstraction_node")
         std::chrono::milliseconds(100), // 10 Hz
         std::bind(&MotorAbstractionNode::publish_rviz_joint_states, this));
     dispatch_motor_commands_timer_ = this->create_wall_timer(
-        std::chrono::milliseconds(10), // 10 Hz
+        std::chrono::milliseconds(5), // 10 Hz
         std::bind(&MotorAbstractionNode::dispatch_motor_commands, this));
-    control_loop_timer_ = this->create_wall_timer(
-        std::chrono::milliseconds(2), // 10 Hz
-        std::bind(&MotorAbstractionNode::control_loop, this));
+    // control_loop_timer_ = this->create_wall_timer(
+    //     std::chrono::milliseconds(1000), // 10 Hz
+    //     std::bind(&MotorAbstractionNode::control_loop, this));
 }
 
 MotorAbstractionNode::~MotorAbstractionNode()
@@ -32,30 +32,47 @@ MotorAbstractionNode::~MotorAbstractionNode()
 
 void MotorAbstractionNode::process_remote_signal(humanoid_interfaces::msg::RemoteSignal::SharedPtr remote_signal)
 {
-    auto robot_state_msg = humanoid_interfaces::msg::RobotState();
-    if (remote_signal->online && (remote_signal->right_switch != humanoid_interfaces::msg::RemoteSignal::SWITCH_DOWN))
+    if (remote_signal->online && (remote_signal->right_switch == humanoid_interfaces::msg::RemoteSignal::SWITCH_MID))
     {
-        
-        robot_state_msg.enabled = true;
-        motor_commands_["left_hip_pitch_joint"].position = remote_signal->left_stick_y+0.5;
-        motor_commands_["right_hip_pitch_joint"].position = remote_signal->right_stick_y+0.5;
+
+        robot_state_msg_.enabled = 1;
+        motor_commands_["left_hip_pitch_joint"].position = remote_signal->left_stick_y + 0.5;
+        motor_commands_["right_hip_pitch_joint"].position = remote_signal->right_stick_y + 0.5;
         motor_commands_["left_hip_roll_joint"].position = -remote_signal->left_stick_x;
         motor_commands_["right_hip_roll_joint"].position = -remote_signal->right_stick_x;
+        
+    }
+    else if (remote_signal->online && (remote_signal->right_switch == humanoid_interfaces::msg::RemoteSignal::SWITCH_UP))
+    {
+        robot_state_msg_.enabled = 2;
     }
     else
     {
-        robot_state_msg.enabled = false;
+        robot_state_msg_.enabled = 0;
+    }
+    robot_state_pub_->publish(robot_state_msg_);
+}
+
+void MotorAbstractionNode::control_loop()
+{
+    switch (robot_state_msg_.enabled)
+    {
+    case 0:
         for (const auto &motor_name : motor_names)
         {
             motor_stats_[motor_name] = {0.0, 0.0, 0.0};    // Default position, velocity, and effort
             motor_commands_[motor_name] = {0.0, 0.0, 0.0}; // Default position, velocity, and effort
         }
-    }
-    robot_state_pub_->publish(robot_state_msg);
-}
+        break;
+    case 1:
+        break; // give priority to remote callback (remote control)
 
-void MotorAbstractionNode::control_loop()
-{
+    case 2:
+        
+        break;
+    default:
+        break;
+    }
 }
 
 /**
@@ -63,6 +80,7 @@ void MotorAbstractionNode::control_loop()
  */
 void MotorAbstractionNode::allocate_motor_data()
 {
+    robot_state_msg_ = humanoid_interfaces::msg::RobotState();
     // Initialize motor_data_ with default motors and default values
     motor_names = {
         "left_hip_pitch_joint", "left_knee_joint", "right_hip_pitch_joint", "right_knee_joint",

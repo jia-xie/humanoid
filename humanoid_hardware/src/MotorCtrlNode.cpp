@@ -12,7 +12,7 @@ MotorControlNode::MotorControlNode() : Node("motor_control_node"), running_(true
     }
 
     // Load command and feedback CAN IDs, kp, and kd values
-    std::vector<std::string> motor_names = {
+    motor_names = {
         "left_hip_yaw_joint", "left_hip_roll_joint", "left_hip_pitch_joint",
         "left_knee_joint", "left_ankle_joint",
         "right_hip_yaw_joint", "right_hip_roll_joint", "right_hip_pitch_joint",
@@ -64,6 +64,20 @@ MotorControlNode::~MotorControlNode()
     {
         receiver_thread_.join(); // Wait for the thread to finish
     }
+    for (size_t i = 0; i < motor_names.size(); ++i)
+    {
+        const auto &motor_name = motor_names[i];
+        auto motor_it = std::find_if(motors_.begin(), motors_.end(), [&](DaMiaoMotor &motor)
+                                     { return motor.getName() == motor_name; });
+
+        if (motor_it != motors_.end())
+        {
+            uint8_t cmd_data[8];
+
+            motor_it->encode_disable_msg(cmd_data);
+            can_transmit(motor_it->getCmdCanId(), cmd_data, 8);
+        }
+    }
     close(socket_fd_); // Close CAN socket
 }
 
@@ -93,7 +107,7 @@ int MotorControlNode::can_init(const char *interface)
     }
 
     struct timeval timeout;
-    timeout.tv_sec = 1;  // Timeout in seconds
+    timeout.tv_sec = 1; // Timeout in seconds
 
     if (setsockopt(socket_fd_, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout)) < 0)
     {
@@ -198,13 +212,13 @@ void MotorControlNode::can_receive()
 
 void MotorControlNode::robot_state_callback(const humanoid_interfaces::msg::RobotState::SharedPtr msg)
 {
-    if (msg->enabled)
+    if (msg->enabled == 0)
     {
-        robot_enabled = 1;
+        robot_enabled = 0;
     }
     else
     {
-        robot_enabled = 0;
+        robot_enabled = 1;
     }
 }
 
@@ -232,18 +246,17 @@ void MotorControlNode::motor_command_callback(const sensor_msgs::msg::JointState
             motor_it->set_cmd(msg->position[i], msg->velocity[i], msg->effort[i]); // Example kp, kd values
 
             uint8_t cmd_data[8];
-            if (robot_enabled)
+            if (robot_enabled == 0)
             {
-                motor_it->encode_enable_msg(cmd_data);
+                motor_it->encode_disable_msg(cmd_data);
             }
             else
             {
-                motor_it->encode_disable_msg(cmd_data);
+                motor_it->encode_enable_msg(cmd_data);
             }
 
             // RCLCPP_INFO(this->get_logger(), "Encoded command data for transmission: [%02X %02X %02X %02X %02X %02X %02X %02X]",
             //             cmd_data[0], cmd_data[1], cmd_data[2], cmd_data[3], cmd_data[4], cmd_data[5], cmd_data[6], cmd_data[7]);
-            
 
             if (can_transmit(motor_it->getCmdCanId(), cmd_data, 8))
             {
@@ -259,10 +272,10 @@ void MotorControlNode::motor_command_callback(const sensor_msgs::msg::JointState
             // print motor cmd info
             // RCLCPP_INFO(this->get_logger(), "Motor: %s, Cmd CAN ID: %d, Pos: %f, Vel: %f, Torq: %f, kp: %f, kd: %f",
             //             motor_it->getName().c_str(), motor_it->getCmdCanId(), msg->position[i], msg->velocity[i], msg->effort[i], motor_it->getKp(), motor_it->getKd());
-                        
+
             // RCLCPP_INFO(this->get_logger(), "Encoded command data for transmission: [%02X %02X %02X %02X %02X %02X %02X %02X]",
             //             cmd_data[0], cmd_data[1], cmd_data[2], cmd_data[3], cmd_data[4], cmd_data[5], cmd_data[6], cmd_data[7]);
-            
+
             if (can_transmit(motor_it->getCmdCanId(), cmd_data, 8))
             {
                 // RCLCPP_INFO(this->get_logger(), "CAN transmission successful for motor: %s, Cmd CAN ID: %d", motor_it->getName().c_str(), motor_it->getCmdCanId());

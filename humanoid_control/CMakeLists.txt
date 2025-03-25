@@ -38,4 +38,9 @@ install (
     DESTINATION lib/${PROJECT_NAME}
 )
 
+install (
+    PROGRAMS
+      scripts/policy_node.py
+    DESTINATION lib/${PROJECT_NAME}
+)
 ament_package()
