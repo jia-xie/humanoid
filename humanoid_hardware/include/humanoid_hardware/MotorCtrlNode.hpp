@@ -35,12 +35,14 @@ private:
     void motor_command_callback(const sensor_msgs::msg::JointState::SharedPtr msg);
 
     void robot_state_callback(const humanoid_interfaces::msg::RobotState::SharedPtr msg);
-
+    void maintain_enable_state();
     // ROS 2 Publishers and Subscribers
     rclcpp::Publisher<humanoid_interfaces::msg::MotorFeedback>::SharedPtr motor_feedback_pub_;
     rclcpp::Subscription<sensor_msgs::msg::JointState>::SharedPtr motor_command_sub_;
     rclcpp::Subscription<humanoid_interfaces::msg::RobotState>::SharedPtr robot_state_sub_;
 
+    rclcpp::TimerBase::SharedPtr maintain_enable_state_timer_;
+    
     // Thread management
     std::thread receiver_thread_;
     std::atomic<bool> running_;  // Flag to control the receiving thread

@@ -5,6 +5,7 @@
 #include "humanoid_interfaces/msg/remote_signal.hpp"
 #include "humanoid_interfaces/msg/robot_state.hpp"
 #include "std_msgs/msg/float64.hpp"
+#include "std_msgs/msg/float64_multi_array.hpp"
 
 class MotorAbstractionNode : public rclcpp::Node
 {
@@ -17,15 +18,21 @@ private:
     void publish_rviz_joint_states(); //publish joint states for rviz2 visualization
     void process_motor_stats(humanoid_interfaces::msg::MotorFeedback::SharedPtr motor_feedback);
     void dispatch_motor_commands();
+    void publish_processed_motor_stats();
     void control_loop();
     void process_remote_signal(humanoid_interfaces::msg::RemoteSignal::SharedPtr remote_signal);
+    void process_policy_output(std_msgs::msg::Float64MultiArray::SharedPtr policy_output);
 
     rclcpp::Subscription<humanoid_interfaces::msg::MotorFeedback>::SharedPtr motor_feedback_sub_; // this subscriber will get motor feedback data from motor control node
+    rclcpp::Subscription<std_msgs::msg::Float64MultiArray>::SharedPtr policy_output_sub_; // this subscriber will get motor feedback data from motor control node
     rclcpp::Publisher<sensor_msgs::msg::JointState>::SharedPtr motor_command_pub_;
     rclcpp::Publisher<sensor_msgs::msg::JointState>::SharedPtr rviz_joint_state_pub_;
     rclcpp::Subscription<humanoid_interfaces::msg::RemoteSignal>::SharedPtr remote_signal_sub_;
     rclcpp::Publisher<humanoid_interfaces::msg::RobotState>::SharedPtr robot_state_pub_;
     rclcpp::Publisher<std_msgs::msg::Float64>::SharedPtr test_publisher_;
+    rclcpp::Publisher<std_msgs::msg::Float64MultiArray>::SharedPtr joint_pos_publisher_;
+    rclcpp::Publisher<std_msgs::msg::Float64MultiArray>::SharedPtr joint_vel_publisher_;
+    
     std::vector<std::string> motor_names;
     // Data structure to store the latest data (feedback from motor and command that will be sent out)
     struct MotorData
@@ -40,9 +47,12 @@ private:
     std::mutex motor_commands_mutex_;
     humanoid_interfaces::msg::RobotState robot_state_msg_;
     
+    // std_msgs::msg::Float64MultiArray joint_position_msg;
+    // std_msgs::msg::Float64MultiArray joint_velocity_msg;
 
     // Timers
     rclcpp::TimerBase::SharedPtr publish_rviz_joint_state_timer_;
     rclcpp::TimerBase::SharedPtr dispatch_motor_commands_timer_;
+    rclcpp::TimerBase::SharedPtr publish_processed_motor_stats_timer_;
     rclcpp::TimerBase::SharedPtr control_loop_timer_;
 };
