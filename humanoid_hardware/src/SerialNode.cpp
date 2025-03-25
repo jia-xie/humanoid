@@ -193,10 +193,25 @@ void SerialNode::readDataCallback()
     memcpy(&decoded_data.rad[1], &buffer[33 + sizeof(float)], sizeof(float));
     memcpy(&decoded_data.rad[2], &buffer[33 + sizeof(float) * 2], sizeof(float));
 
+    decoded_data.rad[0] += M_PI;
+    if (decoded_data.rad[0] > M_PI)
+    {
+        decoded_data.rad[0] -= 2 * M_PI;
+    }
+    float tmp[3];
+    tmp[0] = -decoded_data.rad[1];
+    tmp[1] = decoded_data.rad[0];
+    tmp[2] = decoded_data.rad[2];
+
+    float veltmp[3];
+    veltmp[0] = decoded_data.gyro[1];
+    veltmp[1] = decoded_data.gyro[0];
+    veltmp[2] = -decoded_data.gyro[2];
+
     std_msgs::msg::Float64MultiArray msg;
-    msg.data.insert(msg.data.end(), decoded_data.gyro, decoded_data.gyro + 3);
+    msg.data.insert(msg.data.end(), veltmp, veltmp + 3);
     msg.data.insert(msg.data.end(), decoded_data.accel, decoded_data.accel + 3);
-    msg.data.insert(msg.data.end(), decoded_data.rad, decoded_data.rad + 3);
+    msg.data.insert(msg.data.end(), tmp, tmp + 3);
 
     imu_pub_->publish(msg);
 
@@ -220,7 +235,7 @@ void SerialNode::readDataCallback()
     if (print_serial_count >= 5000)
     {
         print_serial_count = 0;
-        RCLCPP_INFO(this->get_logger(), "%s", hex_stream.str().c_str());
+        RCLCPP_DEBUG(this->get_logger(), "%s", hex_stream.str().c_str());
         int16_t right_stick_x = ((remote_buffer[0] | (remote_buffer[1] << 8)) & 0x07ff) - 1024;
         int16_t right_stick_y = (((remote_buffer[1] >> 3) | (remote_buffer[2] << 5)) & 0x07ff) - 1024;
         int16_t left_stick_x = (((remote_buffer[2] >> 6) | (remote_buffer[3] << 2) | (remote_buffer[4] << 10)) & 0x07ff) - 1024;

@@ -6,14 +6,27 @@ MotorAbstractionNode::MotorAbstractionNode() : Node("motor_abstraction_node")
 
     // create subscribers and publishers
     motor_feedback_sub_ = this->create_subscription<humanoid_interfaces::msg::MotorFeedback>(
-        "humanoid_interfaces/motor_feedback", 1,
+        "humanoid_interfaces/motor_feedback", rclcpp::SensorDataQoS(),
         std::bind(&MotorAbstractionNode::process_motor_stats, this, std::placeholders::_1));
+
+    policy_output_sub_ = this->create_subscription<std_msgs::msg::Float64MultiArray>(
+        "policy_output", 10,
+        std::bind(&MotorAbstractionNode::process_policy_output, this, std::placeholders::_1));
+
     motor_command_pub_ = this->create_publisher<sensor_msgs::msg::JointState>("humanoid_interfaces/motor_commands", 1);
     rviz_joint_state_pub_ = this->create_publisher<sensor_msgs::msg::JointState>("/joint_states", 10);
     remote_signal_sub_ = this->create_subscription<humanoid_interfaces::msg::RemoteSignal>(
         "/remote_signal", 10,
         std::bind(&MotorAbstractionNode::process_remote_signal, this, std::placeholders::_1));
     robot_state_pub_ = this->create_publisher<humanoid_interfaces::msg::RobotState>("/robot_state", 10);
+    
+        
+    // rclcpp::QoS qos(rclcpp::KeepLast(1));
+    // qos.reliability(RMW_QOS_POLICY_RELIABILITY_RELIABLE);
+    joint_pos_publisher_ = this->create_publisher<std_msgs::msg::Float64MultiArray>(
+        "/processed_joint_positions", 1);
+    joint_vel_publisher_ = this->create_publisher<std_msgs::msg::Float64MultiArray>(
+        "/processed_joint_velocities", 1);
     // create a timers
     publish_rviz_joint_state_timer_ = this->create_wall_timer(
         std::chrono::milliseconds(100), // 10 Hz
@@ -21,17 +34,34 @@ MotorAbstractionNode::MotorAbstractionNode() : Node("motor_abstraction_node")
     dispatch_motor_commands_timer_ = this->create_wall_timer(
         std::chrono::milliseconds(5), // 10 Hz
         std::bind(&MotorAbstractionNode::dispatch_motor_commands, this));
-    // control_loop_timer_ = this->create_wall_timer(
-    //     std::chrono::milliseconds(1000), // 10 Hz
-    //     std::bind(&MotorAbstractionNode::control_loop, this));
+
+    publish_processed_motor_stats_timer_ = this->create_wall_timer(
+            std::chrono::milliseconds(5), // 10 Hz
+            std::bind(&MotorAbstractionNode::publish_processed_motor_stats, this));
+    
 }
 
 MotorAbstractionNode::~MotorAbstractionNode()
 {
 }
 
+void MotorAbstractionNode::process_policy_output(std_msgs::msg::Float64MultiArray::SharedPtr policy_output)
+{
+    RCLCPP_INFO(this->get_logger(), "Received policy output");
+    // mutex
+    std::lock_guard<std::mutex> lock(motor_commands_mutex_);
+    if (!(robot_state_msg_.enabled == 2)) {return;}
+    for (size_t i = 0; i < policy_output->data.size(); i++)
+    {
+        motor_commands_[motor_names[i]].position = policy_output->data[i];
+    }
+    robot_state_pub_->publish(robot_state_msg_);
+}
+
 void MotorAbstractionNode::process_remote_signal(humanoid_interfaces::msg::RemoteSignal::SharedPtr remote_signal)
 {
+    // mutex
+    std::lock_guard<std::mutex> lock(motor_commands_mutex_);
     if (remote_signal->online && (remote_signal->right_switch == humanoid_interfaces::msg::RemoteSignal::SWITCH_MID))
     {
 
@@ -81,6 +111,10 @@ void MotorAbstractionNode::control_loop()
 void MotorAbstractionNode::allocate_motor_data()
 {
     robot_state_msg_ = humanoid_interfaces::msg::RobotState();
+    
+
+
+
     // Initialize motor_data_ with default motors and default values
     motor_names = {
         "left_hip_pitch_joint", "left_knee_joint", "right_hip_pitch_joint", "right_knee_joint",
@@ -119,6 +153,34 @@ void MotorAbstractionNode::process_motor_stats(humanoid_interfaces::msg::MotorFe
     // velocity and torque are directly copied
     motor_stats_[motor_feedback->motor_name].velocity = motor_feedback->velocity;
     motor_stats_[motor_feedback->motor_name].torque = motor_feedback->torque;
+}
+
+void MotorAbstractionNode::publish_processed_motor_stats()
+{
+    std::lock_guard<std::mutex> lock(motor_stats_mutex_);
+    std_msgs::msg::Float64MultiArray joint_position_msg;
+    joint_position_msg.data.insert(joint_position_msg.data.end(), motor_stats_["left_hip_pitch_joint"].position);
+    joint_position_msg.data.insert(joint_position_msg.data.end(), motor_stats_["left_knee_joint"].position);
+    joint_position_msg.data.insert(joint_position_msg.data.end(), motor_stats_["right_hip_pitch_joint"].position);
+    joint_position_msg.data.insert(joint_position_msg.data.end(), motor_stats_["right_knee_joint"].position);
+    joint_position_msg.data.insert(joint_position_msg.data.end(), motor_stats_["left_hip_yaw_joint"].position);
+    joint_position_msg.data.insert(joint_position_msg.data.end(), motor_stats_["left_hip_roll_joint"].position);
+    joint_position_msg.data.insert(joint_position_msg.data.end(), motor_stats_["right_hip_yaw_joint"].position);
+    joint_position_msg.data.insert(joint_position_msg.data.end(), motor_stats_["right_hip_roll_joint"].position);
+
+    std_msgs::msg::Float64MultiArray joint_velocity_msg;
+    joint_velocity_msg.data.insert(joint_velocity_msg.data.end(), motor_stats_["left_hip_pitch_joint"].velocity);
+    joint_velocity_msg.data.insert(joint_velocity_msg.data.end(), motor_stats_["left_knee_joint"].velocity);
+    joint_velocity_msg.data.insert(joint_velocity_msg.data.end(), motor_stats_["right_hip_pitch_joint"].velocity);
+    joint_velocity_msg.data.insert(joint_velocity_msg.data.end(), motor_stats_["right_knee_joint"].velocity);
+    joint_velocity_msg.data.insert(joint_velocity_msg.data.end(), motor_stats_["left_hip_yaw_joint"].velocity);
+    joint_velocity_msg.data.insert(joint_velocity_msg.data.end(), motor_stats_["left_hip_roll_joint"].velocity);
+    joint_velocity_msg.data.insert(joint_velocity_msg.data.end(), motor_stats_["right_hip_yaw_joint"].velocity);
+    joint_velocity_msg.data.insert(joint_velocity_msg.data.end(), motor_stats_["right_hip_roll_joint"].velocity);
+
+    joint_pos_publisher_->publish(joint_position_msg);
+    joint_vel_publisher_->publish(joint_velocity_msg);
+    // RCLCPP_INFO(this->get_logger(), "Published processed motor stats");
 }
 
 /**
