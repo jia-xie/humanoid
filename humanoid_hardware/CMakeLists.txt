@@ -18,10 +18,11 @@ endif()
 # find dependencies
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
-find_package(sensor_msgs)
+find_package(sensor_msgs REQUIRED)
+find_package(hardware_interface REQUIRED)
+find_package(pluginlib REQUIRED)
 find_package(humanoid_interfaces REQUIRED)
 find_package(std_msgs REQUIRED)
-
 
 include_directories(include)
 
@@ -56,8 +57,27 @@ ament_target_dependencies(MotorAbstractionNode
     sensor_msgs
 )
 
-install (
-    TARGETS
+# ---------------------------
+# ROS 2 Control Plugin
+# ---------------------------
+add_library(humanoid_system_hardware SHARED
+	src/HumanoidSystemHardware.cpp
+)
+
+ament_target_dependencies(humanoid_system_hardware
+    rclcpp
+    hardware_interface
+    pluginlib
+)
+
+target_include_directories(humanoid_system_hardware PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+)
+
+pluginlib_export_plugin_description_file(hardware_interface humanoid_hardware_plugins.xml)
+
+install(TARGETS
+    humanoid_system_hardware
     MotorCtrlNode
     SerialNode
     MotorAbstractionNode

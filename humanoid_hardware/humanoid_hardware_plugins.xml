@@ -1,0 +1,5 @@
+<library path="humanoid_system_hardware">
+  <class name="humanoid_hardware/HumanoidSystemHardware"
+         type="humanoid_hardware::HumanoidSystemHardware"
+         base_class_type="hardware_interface::SystemInterface"/>
+</library>
