@@ -7,6 +7,8 @@ import matplotlib.pyplot as plt
 import torch
 import os
 
+# import humanoid_control.scripts.policy_node
+
 class Humanoid_Wrapper:
     def __init__(self):
         self.model = mujoco.MjModel.from_xml_path('humanoid_mujoco/urdf/humanoid.xml')
@@ -18,12 +20,13 @@ class Humanoid_Wrapper:
         print('Policy loaded')
 
         # --- PD Controller Parameters ---
-        self.Kp = 20.0
-        self.Kd = 0.05
+        # self.Kp = 20.0
+        # self.Kd = 0.05
         
         # Target joint positions (same size as qpos)
         self.qpos_des = np.zeros_like(self.data.qpos)
         self.qvel_des = np.zeros_like(self.data.qvel)
+        # self.policy_node = 
 
 
 def main():
@@ -36,12 +39,19 @@ def main():
         step_count = 0
         print_interval = 1  # e.g., print every ~1 second
         print("MuJoCo simulation time step:", humanoid.model.opt.timestep)
+       
+        amplitude = np.deg2rad(30)
+        frequency = 0.1
+        # qpos_des = np.zeros_like(humanoid.data.qpos)
+
         while viewer.is_running() and time.time() - start_time < 300:
             step_start = time.time()
 
             # # --- Sine Wave Desired Position and Velocity ---
-            # t = time.time() - start_time
-            # qpos_des = amplitude * np.sin(2 * np.pi * frequency * t)
+            t = time.time() - start_time
+            qpos_des = amplitude * np.sin(2 * np.pi * frequency * t)
+            # qpos_des[1] = sinestuff
+            # qpos_des[6] = sinestuff
             # qpos_des_history.append(qpos_des.copy())
             # time_history.append(t)
 
@@ -55,7 +65,7 @@ def main():
 
             # # Apply torque (must match number of actuators)
             # humanoid.data.ctrl[:] = torque[:humanoid.model.nu]  # humanoid.model.nu is number of actuators
-
+            humanoid.data.ctrl[:] = qpos_des
 
             mujoco.mj_step(humanoid.model, humanoid.data)
 

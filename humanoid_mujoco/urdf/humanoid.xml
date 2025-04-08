@@ -1,6 +1,28 @@
 <mujoco model="urdf_export.SLDASM">
   <compiler angle="radian"/>
 
+  <option timestep="0.0002"/>
+
+  <extension>
+    <plugin plugin="mujoco.pid">
+      <instance name="4340">
+        <config key="kp" value="60.0"/>
+        <config key="ki" value="0"/>
+        <config key="kd" value="1.0"/>
+      </instance>
+      <instance name="4310">
+        <config key="kp" value="50.0"/>
+        <config key="ki" value="0"/>
+        <config key="kd" value="0.5"/>
+      </instance>
+      <instance name="2006">
+        <config key="kp" value="0.0"/>
+        <config key="ki" value="0.0"/>
+        <config key="kd" value="0.0"/>
+      </instance>
+    </plugin>
+  </extension>
+  
   <asset>
     <mesh name="base_link" file="base_link.STL"/>
     <mesh name="left_hip_yaw_link" file="left_hip_yaw_link.STL"/>
@@ -16,16 +38,16 @@
   </asset>
 
   <actuator>
-    <motor joint="left_hip_yaw_joint" gear="1"/>
-    <motor joint="left_hip_roll_joint" gear="1"/>
-    <motor joint="left_hip_pitch_joint" gear="1"/>
-    <motor joint="left_knee_joint" gear="1"/>
-    <motor joint="left_ankle_joint" gear="1"/>
-    <motor joint="right_hip_yaw_joint" gear="1"/>
-    <motor joint="right_hip_roll_joint" gear="1"/>
-    <motor joint="right_hip_pitch_joint" gear="1"/>
-    <motor joint="right_knee_joint" gear="1"/>
-    <motor joint="right_ankle_joint" gear="1"/>
+    <plugin joint="left_hip_yaw_joint" plugin="mujoco.pid" instance="4310"/>
+    <plugin joint="left_hip_roll_joint" plugin="mujoco.pid" instance="4310"/>
+    <plugin joint="left_hip_pitch_joint" plugin="mujoco.pid" instance="4340"/>
+    <plugin joint="left_knee_joint" plugin="mujoco.pid" instance="4340"/>
+    <plugin joint="left_ankle_joint" plugin="mujoco.pid" instance="2006"/>
+    <plugin joint="right_hip_yaw_joint" plugin="mujoco.pid" instance="4310"/>
+    <plugin joint="right_hip_roll_joint" plugin="mujoco.pid" instance="4310"/>
+    <plugin joint="right_hip_pitch_joint" plugin="mujoco.pid" instance="4340"/>
+    <plugin joint="right_knee_joint" plugin="mujoco.pid" instance="4340"/>
+    <plugin joint="right_ankle_joint" plugin="mujoco.pid" instance="2006"/>
   </actuator>
 
   <worldbody>
